@@ -275,7 +275,7 @@ async function sendMessages(comms, campaign) {
   });
   await updateCommStatus(comm.id, 'sent');
 }
-      } else {
+ else {
         await updateCommStatus(comm.id, 'failed', 'Missing credentials or contact info');
       }
     } catch (err) {
