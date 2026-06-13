@@ -247,14 +247,34 @@ async function sendMessages(comms, campaign) {
           to: comm._phone
         });
         await updateCommStatus(comm.id, 'sent');
-      } else if (channel === 'email' && transporter && comm._email) {
-        await transporter.sendMail({
-          from: process.env.EMAIL_FROM || 'no-reply@example.com',
-          to: comm._email,
-          subject: campaign.name,
-          text: comm.message,
-        });
-        await updateCommStatus(comm.id, 'sent');
+} else if (channel === 'email' && process.env.RESEND_API_KEY && comm._email) {
+  const resendResponse = await axios.post(
+    'https://api.resend.com/emails',
+    {
+      from: process.env.RESEND_FROM_EMAIL || 'Xeno CRM <onboarding@resend.dev>',
+      to: [comm._email],
+      subject: campaign.name,
+      text: comm.message,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  console.log('Resend email sent:', resendResponse.data);
+  await updateCommStatus(comm.id, 'sent');
+} else if (channel === 'email' && transporter && comm._email) {
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || 'no-reply@example.com',
+    to: comm._email,
+    subject: campaign.name,
+    text: comm.message,
+  });
+  await updateCommStatus(comm.id, 'sent');
+}
       } else {
         await updateCommStatus(comm.id, 'failed', 'Missing credentials or contact info');
       }
