@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: xeno_crm_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      FRONTEND_URL: http://localhost:3000
+      DELIVERY_RECEIPT_URL: http://channel-stub:4000/api/send
+
+  channel-stub:
+    build:
+      context: ./channel-stub
+      dockerfile: Dockerfile
+    container_name: xeno_crm_channel_stub
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      BACKEND_CALLBACK_URL: http://backend:5000/api/receipts
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: xeno_crm_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000
+    depends_on:
+      - backend
